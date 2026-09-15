@@ -1,9 +1,20 @@
 import java.net.HttpURLConnection
 import java.net.URI
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+// release 签名信息放在项目根目录的 keystore.properties（已在 .gitignore 忽略，不入库）。
+// 缺失时保持空配置，本地或 CI 无密钥也能正常构建（release 退回未签名产物）。
+// 格式见 keystore.properties.example。
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
 }
 
 // 构建时拉取一次开发者头像到 assets，保证每次编译的头像都是最新的；
@@ -32,6 +43,10 @@ val fetchDeveloperAvatars by tasks.registering {
         // 清掉旧头像，避免残留已移除的开发者。
         outDir.listFiles()?.forEach { it.delete() }
 
+        // 记录下载失败/产物缺失的开发者，收集完后统一在末尾中断构建，
+        // 避免带着缺失头像的包被静默打出来。
+        val failed = mutableListOf<String>()
+
         for ((name, url) in avatars) {
             val target = outDir.resolve("$name.png")
             try {
@@ -44,12 +59,27 @@ val fetchDeveloperAvatars by tasks.registering {
                 conn.inputStream.use { input ->
                     target.outputStream().use { output -> input.copyTo(output) }
                 }
-                logger.lifecycle("fetched avatar: $name -> ${target.name}")
+                // 校验产物确实写入且非空，空文件同样视为失败。
+                if (!target.exists() || target.length() == 0L) {
+                    target.delete()
+                    failed += "$name (产物为空: $url)"
+                } else {
+                    logger.lifecycle("fetched avatar: $name -> ${target.name} (${target.length()} bytes)")
+                }
             } catch (e: Exception) {
-                // 下载失败不阻断构建；运行时会回退到网络 URL。
-                logger.warn("failed to fetch avatar for $name from $url: ${e.message}")
                 target.delete()
+                failed += "$name ($url): ${e.message}"
             }
+        }
+
+        // 任意头像缺失即中断构建，逼出问题（网络/代理/URL 失效），而非发布缺图的包。
+        if (failed.isNotEmpty()) {
+            throw GradleException(
+                buildString {
+                    appendLine("开发者头像下载失败，已中断构建。请检查网络/代理或头像 URL 后重试：")
+                    failed.forEach { appendLine("  - $it") }
+                }.trimEnd()
+            )
         }
     }
 }
@@ -74,8 +104,29 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            // keystore.properties 缺失时保持空配置，避免无密钥环境构建直接失败。
+            if (keystoreProperties.isNotEmpty()) {
+                storeFile = keystoreProperties.getProperty("storeFile")?.let { rootProject.file(it) }
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+            // 仅启用 APK Signature Scheme v2 + v3；minSdk=26 无需 v1(JAR) 签名，v4 按需另开。
+            enableV1Signing = false
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = false
+        }
+    }
+
     buildTypes {
         release {
+            // 有 keystore 才启用 release 签名，否则保持未签名产物、不阻断构建。
+            if (keystoreProperties.isNotEmpty()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             optimization {
                 enable = false
             }
