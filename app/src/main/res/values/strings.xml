@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">PowerInfo</string>
+    <string name="root_dialog_title">未获取 Root 权限</string>
+    <string name="root_dialog_message_unavailable">本应用需要 Root 权限才能正常使用。当前设备未检测到 Root 环境，请在已 Root 的设备上运行。</string>
+    <string name="root_dialog_message_denied">授权被拒绝。本应用需要 Root 权限才能正常使用，请在超级用户管理器中授予本应用 Root 权限后重试。</string>
+    <string name="root_dialog_retry">重新检测</string>
+    <string name="root_dialog_exit">退出</string>
+    <string name="root_status_granted">已获取 Root 权限</string>
+    <string name="root_status_checking">正在检测 Root 权限…</string>
+    <string name="battery_screen_title">电源信息</string>
+    <string name="battery_action_refresh">刷新</string>
+    <string name="battery_action_auto_refresh">自动刷新周期</string>
+    <string name="battery_loading">正在读取电源信息…</string>
+    <string name="about_title">关于</string>
+    <string name="about_back">返回</string>
+    <string name="about_version">v%1$s</string>
+    <string name="about_support_title">支持与反馈</string>
+    <string name="about_link_github">GitHub</string>
+    <string name="about_link_telegram">Telegram</string>
+    <string name="about_coming_soon">敬请期待</string>
+    <string name="about_section_general_title">关于</string>
+    <string name="about_section_general_body">PowerInfo 是一款读取设备电源相关信息的工具。它按预置的字段定义读取 sysfs 中的电源节点（电池、USB、无线充电、电量计等），并实时展示原始数值，方便查看充电与电池状态。\n\n这些电源节点由内核在 /sys 下导出，多数节点需要 Root 权限才能读取，因此本应用启动时会申请 Root 授权。\n\n不同机型与内核导出的节点各不相同，部分字段在你的设备上可能不存在，此时对应项会显示为 N/A，属正常现象。</string>
+    <string name="about_section_developers_title">开发者</string>
+</resources>
