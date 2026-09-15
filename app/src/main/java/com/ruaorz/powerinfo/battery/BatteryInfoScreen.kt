@@ -1,5 +1,9 @@
 package com.ruaorz.powerinfo.battery
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -122,3 +126,29 @@ internal fun showLoadingPlaceholder(loading: Boolean, readings: List<BatteryRead
 
 /** 内容留白，供两套外壳共用。 */
 internal val ContentPadding = PaddingValues(16.dp)
+
+/**
+ * 复制一条读数（字段名、字段值、目录路径）到剪贴板，并吐司提示。
+ * 供 Material 与 miuix 两套外壳的卡片点击共用。
+ */
+internal fun copyReadingToClipboard(context: Context, reading: BatteryReading) {
+    val text = buildString {
+        append(reading.name)
+        append('\n')
+        append(reading.displayValue)
+        reading.path?.let {
+            append('\n')
+            append(it)
+        }
+    }
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText(reading.name, text))
+    Toast.makeText(
+        context,
+        context.getString(
+            com.ruaorz.powerinfo.R.string.battery_copied,
+            reading.name.trimEnd(':', '：'),
+        ),
+        Toast.LENGTH_SHORT,
+    ).show()
+}

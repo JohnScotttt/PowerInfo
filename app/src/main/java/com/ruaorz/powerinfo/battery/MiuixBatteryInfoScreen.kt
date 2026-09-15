@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -136,7 +137,11 @@ internal fun MiuixBatteryInfoScreen(
 
 @Composable
 private fun MiuixBatteryRow(reading: BatteryReading) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    val context = LocalContext.current
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = { copyReadingToClipboard(context, reading) },
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
