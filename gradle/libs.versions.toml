@@ -6,10 +6,11 @@ junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
-kotlin = "2.2.10"
+kotlin = "2.4.20"
 composeBom = "2026.02.01"
 kotlinxCoroutines = "1.10.2"
 coil = "2.7.0"
+miuix = "0.9.3"
 
 [libraries]
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
@@ -29,6 +30,11 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+
+# miuix（Compose Multiplatform UI 库，Maven Central 稳定版）
+miuix-core = { group = "top.yukonga.miuix.kmp", name = "miuix-core-android", version.ref = "miuix" }
+miuix-ui = { group = "top.yukonga.miuix.kmp", name = "miuix-ui-android", version.ref = "miuix" }
+miuix-preference = { group = "top.yukonga.miuix.kmp", name = "miuix-preference-android", version.ref = "miuix" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

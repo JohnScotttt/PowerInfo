@@ -21,4 +21,7 @@
     <string name="about_section_general_title">关于</string>
     <string name="about_section_general_body">PowerInfo 是一款读取设备电源相关信息的工具。它按预置的字段定义读取 sysfs 中的电源节点（电池、USB、无线充电、电量计等），并实时展示原始数值，方便查看充电与电池状态。\n\n这些电源节点由内核在 /sys 下导出，多数节点需要 Root 权限才能读取，因此本应用启动时会申请 Root 授权。\n\n不同机型与内核导出的节点各不相同，部分字段在你的设备上可能不存在，此时对应项会显示为 N/A，属正常现象。</string>
     <string name="about_section_developers_title">开发者</string>
+    <string name="settings_ui_style_title">界面风格</string>
+    <string name="settings_ui_style_material">Material</string>
+    <string name="settings_ui_style_miuix">miuix</string>
 </resources>

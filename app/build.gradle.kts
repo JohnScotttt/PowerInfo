@@ -153,6 +153,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.coil.compose)
+    // miuix：可选的 UI 风格（关于页里可切换 miuix / material），核心 + preference（含 SuperDropdown）。
+    implementation(libs.miuix.core)
+    implementation(libs.miuix.ui)
+    implementation(libs.miuix.preference)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
