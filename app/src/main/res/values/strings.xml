@@ -11,8 +11,13 @@
     <string name="battery_action_refresh">刷新</string>
     <string name="battery_action_auto_refresh">自动刷新周期</string>
     <string name="battery_loading">正在读取电源信息…</string>
+    <string name="battery_no_root_banner">未获取 Root 权限，以下字段均无法读取，显示为 N/A。点此重新授权。</string>
     <string name="battery_copied">已复制「%1$s」</string>
     <string name="about_title">关于</string>
+    <string name="about_root_status_granted_title">已获取 Root 权限</string>
+    <string name="about_root_status_granted_desc">应用可正常读取全部电源节点。</string>
+    <string name="about_root_status_denied_title">未获取 Root 权限</string>
+    <string name="about_root_status_denied_desc">部分字段无法读取，将显示为 N/A。</string>
     <string name="about_back">返回</string>
     <string name="about_version">v%1$s</string>
     <string name="about_support_title">支持与反馈</string>

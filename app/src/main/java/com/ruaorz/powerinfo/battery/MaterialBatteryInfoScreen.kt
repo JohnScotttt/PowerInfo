@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -46,9 +47,11 @@ internal fun MaterialBatteryInfoScreen(
     readings: List<BatteryReading>,
     loading: Boolean,
     interval: Long?,
+    hasRoot: Boolean,
     onIntervalChange: (Long?) -> Unit,
     onRefresh: () -> Unit,
     onOpenAbout: () -> Unit,
+    onRequestRoot: () -> Unit,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
@@ -124,11 +127,33 @@ internal fun MaterialBatteryInfoScreen(
                 contentPadding = ContentPadding,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                if (!hasRoot) {
+                    item { MaterialNoRootBanner(onRequestRoot) }
+                }
                 items(readings) { reading ->
                     MaterialBatteryRow(reading)
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MaterialNoRootBanner(onRequestRoot: () -> Unit) {
+    Card(
+        onClick = onRequestRoot,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        ),
+    ) {
+        Text(
+            text = stringResource(R.string.battery_no_root_banner),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        )
     }
 }
 

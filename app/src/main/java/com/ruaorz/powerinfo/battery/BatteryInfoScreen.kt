@@ -46,7 +46,11 @@ internal val REFRESH_OPTIONS = listOf(
  * 数据层（[BatteryRepository]、读取与自动刷新的 [LaunchedEffect]）在此复用，两套外壳仅负责渲染。
  */
 @Composable
-fun BatteryInfoScreen(modifier: Modifier = Modifier) {
+fun BatteryInfoScreen(
+    modifier: Modifier = Modifier,
+    hasRoot: Boolean = true,
+    onRequestRoot: () -> Unit = {},
+) {
     val context = LocalContext.current
     val repository = remember { BatteryRepository(context) }
     val fields = remember { repository.loadFields() }
@@ -98,24 +102,28 @@ fun BatteryInfoScreen(modifier: Modifier = Modifier) {
                 readings = readings,
                 loading = loading,
                 interval = interval,
+                hasRoot = hasRoot,
                 onIntervalChange = { interval = it },
                 onRefresh = { refreshKey++ },
                 onOpenAbout = { showAbout = true },
+                onRequestRoot = onRequestRoot,
             )
 
             UiStyle.MIUIX -> MiuixBatteryInfoScreen(
                 readings = readings,
                 loading = loading,
                 interval = interval,
+                hasRoot = hasRoot,
                 onIntervalChange = { interval = it },
                 onRefresh = { refreshKey++ },
                 onOpenAbout = { showAbout = true },
+                onRequestRoot = onRequestRoot,
             )
         }
 
         // 关于页覆盖在主页之上，退出动画播完后移除。
         if (showAbout) {
-            AboutScreen(onExitFinished = { showAbout = false })
+            AboutScreen(hasRoot = hasRoot, onExitFinished = { showAbout = false })
         }
     }
 }

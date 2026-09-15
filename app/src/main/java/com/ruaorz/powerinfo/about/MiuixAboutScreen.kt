@@ -3,6 +3,7 @@ package com.ruaorz.powerinfo.about
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -23,6 +25,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.rounded.CheckCircleOutline
+import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -47,6 +52,7 @@ import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -64,7 +70,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * 本页自带 miuix [Scaffold] 满足该前提。
  */
 @Composable
-internal fun MiuixAboutScreen(modifier: Modifier, onBack: () -> Unit) {
+internal fun MiuixAboutScreen(modifier: Modifier, hasRoot: Boolean, onBack: () -> Unit) {
     val context = LocalContext.current
     val versionName = rememberVersionName()
 
@@ -105,6 +111,9 @@ internal fun MiuixAboutScreen(modifier: Modifier, onBack: () -> Unit) {
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
+                // Root 权限状态卡片，样式对齐 InstallerX 主页「默认安装器工作」状态卡。
+                MiuixRootStatusCard(hasRoot = hasRoot)
+
                 // 界面风格选择框：置于「关于」区块之上。
                 MiuixUiStyleSelector()
 
@@ -116,6 +125,67 @@ internal fun MiuixAboutScreen(modifier: Modifier, onBack: () -> Unit) {
                 MiuixDevelopersSection()
 
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+/**
+ * Root 权限状态卡片（miuix）：样式对齐 InstallerX 主页「默认安装器工作」状态卡。
+ * 淡绿/淡红容器 + 右下角大号水印图标，随系统深浅色切换配色。
+ */
+@Composable
+private fun MiuixRootStatusCard(hasRoot: Boolean) {
+    val dark = isSystemInDarkTheme()
+    val containerColor = when {
+        hasRoot && dark -> Color(0xFF1A3825)
+        hasRoot -> Color(0xFFDFFAE4)
+        dark -> Color(0xFF381A1A)
+        else -> Color(0xFFFAEEEE)
+    }
+    val iconTint = if (hasRoot) Color(0xFF36D167) else Color(0xFFD13636)
+    val textColor = MiuixTheme.colorScheme.onSurface
+    val descColor = textColor.copy(alpha = 0.8f)
+    val icon = if (hasRoot) Icons.Rounded.CheckCircleOutline else Icons.Rounded.ErrorOutline
+    val titleRes = if (hasRoot) R.string.about_root_status_granted_title else R.string.about_root_status_denied_title
+    val descRes = if (hasRoot) R.string.about_root_status_granted_desc else R.string.about_root_status_denied_desc
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.defaultColors(color = containerColor),
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            // 右下角大号水印图标：右下对称出血，右侧与底部被裁比例一致，勾/叹号符号完整可见。
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .offset(x = 26.dp, y = 21.dp),
+                contentAlignment = Alignment.BottomEnd,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(96.dp),
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp),
+            ) {
+                Text(
+                    text = stringResource(titleRes),
+                    style = MiuixTheme.textStyles.title3,
+                    color = textColor,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = stringResource(descRes),
+                    style = MiuixTheme.textStyles.body2,
+                    color = descColor,
+                )
             }
         }
     }

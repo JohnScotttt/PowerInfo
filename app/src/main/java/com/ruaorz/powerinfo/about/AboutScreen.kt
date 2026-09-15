@@ -34,7 +34,7 @@ private const val TRANSITION_DURATION = 300
  * 动画留在入口层包裹两套实现，避免每套各写一遍。
  */
 @Composable
-fun AboutScreen(onExitFinished: () -> Unit) {
+fun AboutScreen(hasRoot: Boolean, onExitFinished: () -> Unit) {
     // 单一进度：0=完全显示，1=完全退出（缩到 0.9 + 淡出，对齐 HMA 的 close_exit）。
     // 初值为 1 表示“缩小/透明”的入场起点，挂载后动到 0 完成进场。
     val progress = remember { Animatable(1f) }
@@ -77,8 +77,8 @@ fun AboutScreen(onExitFinished: () -> Unit) {
     }
 
     when (LocalUiStyle.current.style) {
-        UiStyle.MATERIAL -> MaterialAboutScreen(animatedModifier, onBack)
-        UiStyle.MIUIX -> MiuixAboutScreen(animatedModifier, onBack)
+        UiStyle.MATERIAL -> MaterialAboutScreen(animatedModifier, hasRoot, onBack)
+        UiStyle.MIUIX -> MiuixAboutScreen(animatedModifier, hasRoot, onBack)
     }
 }
 

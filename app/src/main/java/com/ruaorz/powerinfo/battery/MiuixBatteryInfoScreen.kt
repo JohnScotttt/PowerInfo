@@ -1,5 +1,6 @@
 package com.ruaorz.powerinfo.battery
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ruaorz.powerinfo.R
+import com.ruaorz.powerinfo.ui.theme.MiuixSemanticColors
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.DropdownImpl
@@ -33,6 +35,7 @@ import top.yukonga.miuix.kmp.basic.ListPopupColumn
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowListPopup
 
@@ -45,9 +48,11 @@ internal fun MiuixBatteryInfoScreen(
     readings: List<BatteryReading>,
     loading: Boolean,
     interval: Long?,
+    hasRoot: Boolean,
     onIntervalChange: (Long?) -> Unit,
     onRefresh: () -> Unit,
     onOpenAbout: () -> Unit,
+    onRequestRoot: () -> Unit,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val selectedIndex = REFRESH_OPTIONS.indexOfFirst { it.intervalMillis == interval }
@@ -127,11 +132,34 @@ internal fun MiuixBatteryInfoScreen(
                 contentPadding = ContentPadding,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                if (!hasRoot) {
+                    item { MiuixNoRootBanner(onRequestRoot) }
+                }
                 items(readings) { reading ->
                     MiuixBatteryRow(reading)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun MiuixNoRootBanner(onRequestRoot: () -> Unit) {
+    // 采用固定语义色板中的「错误」配色，不随深浅色主题变化，保证提示醒目一致。
+    // squircleBackground 提供与 miuix 卡片一致的平滑圆角容器背景。
+    val error = MiuixSemanticColors.Error
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .squircleBackground(color = error.bg, cornerRadius = 16.dp)
+            .clickable(onClick = onRequestRoot)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.battery_no_root_banner),
+            style = MiuixTheme.textStyles.body2,
+            color = error.fg,
+        )
     }
 }
 

@@ -8,7 +8,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -33,16 +32,12 @@ import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator as MiuixCircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.darkColorScheme
 import top.yukonga.miuix.kmp.theme.lightColorScheme
-import top.yukonga.miuix.kmp.window.WindowDialog
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,7 +50,7 @@ class MainActivity : ComponentActivity() {
 
             CompositionLocalProvider(LocalUiStyle provides uiStyle) {
                 AppTheme(style = uiStyle.style) {
-                    RootGate(onExit = { finish() })
+                    RootGate()
                 }
             }
         }
@@ -98,13 +93,15 @@ private enum class RootState {
 
 /**
  * 启动时检测并申请 Root 权限：
- * 先静态预判是否有 su，再执行 `su -c` 触发超级用户授权弹窗，
- * 未获取权限时按当前界面风格弹出对应风格的对话框提示。
+ * 先静态预判是否有 su，再执行 `su -c` 触发超级用户授权弹窗。
+ *
+ * 无论是否获取到 Root，检测结束后都进入电源信息主界面：
+ * 有 Root 时正常读取字段；无 Root 时各字段读取失败显示 N/A，
+ * 并由主界面顶部提示条承载「重新授权」入口（详见 [BatteryInfoScreen]）。
  */
 @Composable
 fun RootGate(
     modifier: Modifier = Modifier,
-    onExit: () -> Unit,
 ) {
     var state by remember { mutableStateOf(RootState.CHECKING) }
     var attempt by remember { mutableStateOf(0) }
@@ -120,26 +117,23 @@ fun RootGate(
         }
     }
 
-    // 已授权：进入电源信息主界面（其自带 Scaffold，并按风格分派）。
-    if (state == RootState.GRANTED) {
-        BatteryInfoScreen(modifier = modifier)
+    // 检测中：按当前风格显示加载态占位。
+    if (state == RootState.CHECKING) {
+        val style = LocalUiStyle.current.style
+        when (style) {
+            UiStyle.MATERIAL -> MaterialRootGateScaffold(modifier, state)
+            UiStyle.MIUIX -> MiuixRootGateScaffold(modifier, state)
+        }
         return
     }
 
-    val style = LocalUiStyle.current.style
-    when (style) {
-        UiStyle.MATERIAL -> MaterialRootGateScaffold(modifier, state)
-        UiStyle.MIUIX -> MiuixRootGateScaffold(modifier, state)
-    }
-
-    if (state == RootState.UNAVAILABLE || state == RootState.DENIED) {
-        RootRequiredDialog(
-            style = style,
-            denied = state == RootState.DENIED,
-            onRetry = { attempt++ },
-            onExit = onExit,
-        )
-    }
+    // 检测结束：无论有无 Root 都进入主界面。无 Root 时 hasRoot=false，
+    // 主界面据此在顶部展示提示条，点击可触发重新检测/授权。
+    BatteryInfoScreen(
+        modifier = modifier,
+        hasRoot = state == RootState.GRANTED,
+        onRequestRoot = { attempt++ },
+    )
 }
 
 @Composable
@@ -179,59 +173,6 @@ private fun MiuixRootGateScaffold(modifier: Modifier, state: RootState) {
                 MiuixText(
                     text = stringResource(R.string.root_status_checking),
                     modifier = Modifier.padding(top = 16.dp),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun RootRequiredDialog(
-    style: UiStyle,
-    denied: Boolean,
-    onRetry: () -> Unit,
-    onExit: () -> Unit,
-) {
-    val title = stringResource(R.string.root_dialog_title)
-    val message = stringResource(
-        if (denied) R.string.root_dialog_message_denied
-        else R.string.root_dialog_message_unavailable
-    )
-    val retryLabel = stringResource(R.string.root_dialog_retry)
-    val exitLabel = stringResource(R.string.root_dialog_exit)
-
-    when (style) {
-        UiStyle.MATERIAL -> AlertDialog(
-            onDismissRequest = { /* 强制用户做出选择，不允许点击外部关闭 */ },
-            title = { Text(title) },
-            text = { Text(message) },
-            confirmButton = {
-                TextButton(onClick = onRetry) { Text(retryLabel) }
-            },
-            dismissButton = {
-                TextButton(onClick = onExit) { Text(exitLabel) }
-            },
-        )
-
-        UiStyle.MIUIX -> WindowDialog(
-            show = true,
-            title = title,
-            summary = message,
-            // 强制用户做出选择：不响应点击外部/返回关闭（不提供 onDismissRequest）。
-            onDismissRequest = null,
-        ) {
-            Column {
-                MiuixTextButton(
-                    text = retryLabel,
-                    onClick = onRetry,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                MiuixTextButton(
-                    text = exitLabel,
-                    onClick = onExit,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
                 )
             }
         }

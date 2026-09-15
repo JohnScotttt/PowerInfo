@@ -25,10 +25,14 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.UnfoldMore
+import androidx.compose.material.icons.twotone.TaskAlt
+import androidx.compose.material.icons.twotone.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,7 +67,7 @@ import com.ruaorz.powerinfo.ui.style.UiStyle
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun MaterialAboutScreen(modifier: Modifier, onBack: () -> Unit) {
+internal fun MaterialAboutScreen(modifier: Modifier, hasRoot: Boolean, onBack: () -> Unit) {
     val context = LocalContext.current
     val versionName = rememberVersionName()
 
@@ -104,6 +108,9 @@ internal fun MaterialAboutScreen(modifier: Modifier, onBack: () -> Unit) {
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
+                // Root 权限状态卡片，样式对齐 InstallerX 主页「默认安装器工作」状态卡。
+                MaterialRootStatusCard(hasRoot = hasRoot)
+
                 // 界面风格选择框：置于「关于」区块之上。
                 MaterialUiStyleSelector()
 
@@ -115,6 +122,60 @@ internal fun MaterialAboutScreen(modifier: Modifier, onBack: () -> Unit) {
                 MaterialDevelopersSection()
 
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+/**
+ * Root 权限状态卡片（Material）：样式对齐 InstallerX 主页「默认安装器工作」状态卡。
+ * 已获取 root 时用 primaryContainer + 对勾图标，未获取时用 errorContainer + 警告图标。
+ */
+@Composable
+private fun MaterialRootStatusCard(hasRoot: Boolean) {
+    val containerColor = if (hasRoot) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.errorContainer
+    }
+    val contentColor = if (hasRoot) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onErrorContainer
+    }
+    val icon = if (hasRoot) Icons.TwoTone.TaskAlt else Icons.TwoTone.Warning
+    val titleRes = if (hasRoot) R.string.about_root_status_granted_title else R.string.about_root_status_denied_title
+    val descRes = if (hasRoot) R.string.about_root_status_granted_desc else R.string.about_root_status_denied_desc
+
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(containerColor = containerColor),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier
+                    .size(28.dp)
+                    .padding(horizontal = 4.dp),
+            )
+            Column(modifier = Modifier.padding(start = 20.dp)) {
+                Text(
+                    text = stringResource(titleRes),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = contentColor,
+                )
+                Text(
+                    text = stringResource(descRes),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor,
+                )
             }
         }
     }
