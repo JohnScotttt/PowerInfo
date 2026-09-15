@@ -2,7 +2,6 @@ package com.ruaorz.powerinfo.about
 
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -247,11 +246,7 @@ private fun MaterialHeaderCard(
                 ) {
                     MaterialLinkButton(
                         label = stringResource(R.string.about_link_github),
-                        context = context,
-                        modifier = Modifier.weight(1f),
-                    )
-                    MaterialLinkButton(
-                        label = stringResource(R.string.about_link_telegram),
+                        url = AboutContent.GITHUB_URL,
                         context = context,
                         modifier = Modifier.weight(1f),
                     )
@@ -275,13 +270,13 @@ private fun MaterialHeaderCard(
 @Composable
 private fun MaterialLinkButton(
     label: String,
+    url: String,
     context: android.content.Context,
     modifier: Modifier = Modifier,
 ) {
-    val comingSoon = stringResource(R.string.about_coming_soon)
     Button(
         onClick = {
-            Toast.makeText(context, comingSoon, Toast.LENGTH_SHORT).show()
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         },
         modifier = modifier,
     ) {

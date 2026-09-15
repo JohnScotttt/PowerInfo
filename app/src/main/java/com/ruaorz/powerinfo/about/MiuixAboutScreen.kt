@@ -2,7 +2,6 @@ package com.ruaorz.powerinfo.about
 
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +45,7 @@ import com.ruaorz.powerinfo.ui.style.LocalUiStyle
 import com.ruaorz.powerinfo.ui.style.UiStyle
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -197,11 +197,7 @@ private fun MiuixHeaderCard(
                 ) {
                     MiuixLinkButton(
                         label = stringResource(R.string.about_link_github),
-                        context = context,
-                        modifier = Modifier.weight(1f),
-                    )
-                    MiuixLinkButton(
-                        label = stringResource(R.string.about_link_telegram),
+                        url = AboutContent.GITHUB_URL,
                         context = context,
                         modifier = Modifier.weight(1f),
                     )
@@ -225,12 +221,15 @@ private fun MiuixHeaderCard(
 @Composable
 private fun MiuixLinkButton(
     label: String,
+    url: String,
     context: android.content.Context,
     modifier: Modifier = Modifier,
 ) {
-    val comingSoon = stringResource(R.string.about_coming_soon)
     Button(
-        onClick = { Toast.makeText(context, comingSoon, Toast.LENGTH_SHORT).show() },
+        onClick = {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        },
+        colors = ButtonDefaults.buttonColorsPrimary(),
         modifier = modifier,
     ) {
         Text(text = label, color = MiuixTheme.colorScheme.onPrimary)

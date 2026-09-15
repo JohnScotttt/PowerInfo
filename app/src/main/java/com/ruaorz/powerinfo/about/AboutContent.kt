@@ -19,10 +19,7 @@ data class Developer(
 object AboutContent {
 
     /** GitHub 仓库地址。 */
-    const val GITHUB_URL = "https://github.com/JohnScotttt"
-
-    /** Telegram 群组/频道地址（占位）。 */
-    const val TELEGRAM_URL = "https://t.me/"
+    const val GITHUB_URL = "https://github.com/JohnScotttt/PowerInfo"
 
     /** 开发者/贡献者列表。 */
     val DEVELOPERS = listOf(
