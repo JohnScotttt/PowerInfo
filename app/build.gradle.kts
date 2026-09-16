@@ -1,3 +1,4 @@
+import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import java.net.HttpURLConnection
 import java.net.URI
 import java.util.Properties
@@ -99,7 +100,7 @@ android {
         minSdk = 26
         targetSdk = 37
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -138,6 +139,68 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+}
+
+// 归档命名后的 APK，保留每个版本的历史产物（AGP 9 新 DSL，legacy applicationVariants 已不可用）：
+//   release -> apk-archive/PowerInfo-v<版本>.apk
+//   debug   -> apk-archive/PowerInfo-v<版本>+<第几次build>-debug.apk
+// 归档目录 app/apk-archive 在 build 外（gitignore，AGP 不清、clean 不动），历史全留、同版本多份共存；
+// outputs/apk 里保持 AGP 原样（app-<type>.apk）供 IDE 安装运行。
+//
+// debug 的 build 次数按“同一版本号”分别计数，并跨 ./gradlew clean 持久递增：
+// 计数存在 build 目录外的 .build-numbers.properties（gitignore，clean 不清），
+// 格式 <versionName>=<已用的最大 N>。每次 debug 打包读取该版本的值 +1 作为本次序号并写回。
+//
+// 做法：钩住 AGP 的打包任务 package<Variant>，在其 doLast 里把产出的 app-*.apk 复制进归档目录。
+val buildNumbersFile = layout.projectDirectory.file(".build-numbers.properties").asFile
+val apkArchiveDir = layout.projectDirectory.dir("apk-archive").asFile
+
+extensions.configure<ApplicationAndroidComponentsExtension>("androidComponents") {
+    onVariants { variant ->
+        val version = variant.outputs.first().versionName.map { it ?: "0" }
+        val isDebug = variant.buildType == "debug"
+        val packageTaskName = "package${variant.name.replaceFirstChar { it.uppercase() }}"
+
+        // package<Variant> 任务此刻可能尚未注册，用 configureEach 按名延迟匹配，命中后再挂 doLast。
+        tasks.configureEach {
+            if (name != packageTaskName) return@configureEach
+            // 在配置阶段捕获局部变量，避免 doLast 引用脚本对象（configuration cache 友好）。
+            val versionProvider = version
+            val outDir = layout.buildDirectory
+                .dir("outputs/apk/${variant.name}").get().asFile
+            val countersFile = buildNumbersFile
+            val archiveDir = apkArchiveDir
+            doLast {
+                // outputs/apk/<variantName>/ 下 AGP 产出的 app-*.apk。
+                val src = outDir.listFiles()
+                    ?.firstOrNull { it.extension == "apk" && it.name.startsWith("app-") }
+                    ?: return@doLast
+
+                val v = versionProvider.get()
+                val newName = if (isDebug) {
+                    // 从持久计数文件读该版本已用的最大 N，+1 作为本次序号并写回。
+                    val props = Properties()
+                    if (countersFile.exists()) {
+                        countersFile.inputStream().use { props.load(it) }
+                    }
+                    val next = (props.getProperty(v)?.toIntOrNull() ?: 0) + 1
+                    props.setProperty(v, next.toString())
+                    countersFile.outputStream().use {
+                        props.store(it, "PowerInfo debug build numbers per versionName")
+                    }
+                    "PowerInfo-v$v+$next-debug.apk"
+                } else {
+                    "PowerInfo-v$v.apk"
+                }
+
+                // 复制进归档目录（源留在 outputs/apk 供 IDE 安装）。debug 靠 +N 天然不重名、历史全留；
+                // release 同版本重复 build 会覆盖同名文件，符合“每个版本一份”的预期。
+                archiveDir.mkdirs()
+                src.copyTo(archiveDir.resolve(newName), overwrite = true)
+                logger.lifecycle("archived apk: apk-archive/$newName")
+            }
+        }
     }
 }
 

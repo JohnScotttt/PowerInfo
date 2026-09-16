@@ -13,3 +13,7 @@ local.properties
 *.keystore
 keystore.properties
 *.hprof
+app/.build-numbers.properties
+app/apk-archive
+*.apk
+*.aab
